@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <cassert>
 #include <memory>
 #include <stack>
@@ -9,9 +10,9 @@
 #include <regex>
 #include <boost/range/adaptor/reversed.hpp>
 #include "tree.hpp"
-#include "xstrom.hpp"
+#include "xseniorproject.hpp"
 
-namespace strom
+namespace seniorproject
 {
 
     class TreeManip
@@ -32,6 +33,9 @@ namespace strom
             void                        buildFromNewick(const std::string newick, bool rooted, bool allow_polytomies);
             void                        storeSplits(std::set<Split> & splitset);
             void                        rerootAt(int node_index);
+
+            void                        nniNodeSwap(Node * a, Node * b);
+            Node *                      randomInternalEdge(double uniform01);
 
         private:
 
@@ -278,11 +282,11 @@ inline void TreeManip::extractNodeNumberFromName(Node * nd, std::set<unsigned> &
         else
             {
             // insertion was not made, so set already contained x
-            throw XStrom(boost::str(boost::format("leaf number %d used more than once") % x));
+            throw Xseniorproject(boost::str(boost::format("leaf number %d used more than once") % x));
             }
         }
     else
-        throw XStrom(boost::str(boost::format("node name (%s) not interpretable as a positive integer") % nd->_name));
+        throw Xseniorproject(boost::str(boost::format("node name (%s) not interpretable as a positive integer") % nd->_name));
     }
 
 inline void TreeManip::extractEdgeLen(Node * nd, std::string edge_length_string)
@@ -306,7 +310,7 @@ inline void TreeManip::extractEdgeLen(Node * nd, std::string edge_length_string)
         nd->_edge_length = (d < 0.0 ? 0.0 : d);
         }
     else
-        throw XStrom(boost::str(boost::format("%s is not interpretable as an edge length") % edge_length_string));
+        throw Xseniorproject(boost::str(boost::format("%s is not interpretable as an edge length") % edge_length_string));
 
     }
 
@@ -519,10 +523,10 @@ inline void TreeManip::rerootAt(int node_number)
             }
         }
     if (!nd)
-        throw XStrom(boost::str(boost::format("no node found with number equal to %d") % node_number));
+        throw Xseniorproject(boost::str(boost::format("no node found with number equal to %d") % node_number));
 
     if (nd->_left_child)
-        throw XStrom(boost::str(boost::format("cannot currently root trees at internal nodes (e.g. node %d)") % nd->_number));
+        throw Xseniorproject(boost::str(boost::format("cannot currently root trees at internal nodes (e.g. node %d)") % nd->_number));
 
     Node * t = nd;
     Node * m = nd->_parent;
@@ -656,7 +660,7 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
 
     _tree->_nleaves = countNewickLeaves(commentless_newick);
     if (_tree->_nleaves == 0)
-        throw XStrom("Expecting newick tree description to have at least 4 leaves");
+        throw Xseniorproject("Expecting newick tree description to have at least 4 leaves");
     unsigned max_nodes = 2*_tree->_nleaves - (_tree->_is_rooted ? 0 : 2);
     _tree->_nodes.resize(max_nodes);
 
@@ -748,7 +752,7 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
             else if (inside_unquoted_name)
                 {
                 if (ch == '(')
-                    throw XStrom(boost::str(boost::format("Unexpected left parenthesis inside node name at position %d in tree description") % node_name_position));
+                    throw Xseniorproject(boost::str(boost::format("Unexpected left parenthesis inside node name at position %d in tree description") % node_name_position));
 
                 if (iswspace(ch) || ch == ':' || ch == ',' || ch == ')')
                     {
@@ -756,7 +760,7 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
 
                     // Expect node name only after a left paren (child's name), a comma (sib's name) or a right paren (parent's name)
                     if (!(previous & Name_Valid))
-                        throw XStrom(boost::str(boost::format("Unexpected node name (%s) at position %d in tree description") % nd->_name % node_name_position));
+                        throw Xseniorproject(boost::str(boost::format("Unexpected node name (%s) at position %d in tree description") % nd->_name % node_name_position));
 
                     if (!nd->_left_child)
                         {
@@ -788,7 +792,7 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
                     {
                     bool valid = (ch =='e' || ch == 'E' || ch =='.' || ch == '-' || ch == '+' || isdigit(ch));
                     if (!valid)
-                        throw XStrom(boost::str(boost::format("Invalid branch length character (%c) at position %d in tree description") % ch % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Invalid branch length character (%c) at position %d in tree description") % ch % position_in_string));
                     edge_length_str += ch;
                     continue;
                     }
@@ -805,39 +809,39 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
                 case ')':
                     // If nd is bottommost node, expecting left paren or semicolon, but not right paren
                     if (!nd->_parent)
-                        throw XStrom(boost::str(boost::format("Too many right parentheses at position %d in tree description") % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Too many right parentheses at position %d in tree description") % position_in_string));
 
                     // Expect right paren only after an edge length, a node name, or another right paren
                     if (!(previous & RParen_Valid))
-                        throw XStrom(boost::str(boost::format("Unexpected right parenthesisat position %d in tree description") % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Unexpected right parenthesisat position %d in tree description") % position_in_string));
 
                     // Go down a level
                     nd = nd->_parent;
                     if (!nd->_left_child->_right_sib)
-                        throw XStrom(boost::str(boost::format("Internal node has only one child at position %d in tree description") % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Internal node has only one child at position %d in tree description") % position_in_string));
                     previous = Prev_Tok_RParen;
                     break;
 
                 case ':':
                     // Expect colon only after a node name or another right paren
                     if (!(previous & Colon_Valid))
-                        throw XStrom(boost::str(boost::format("Unexpected colon at position %d in tree description") % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Unexpected colon at position %d in tree description") % position_in_string));
                     previous = Prev_Tok_Colon;
                     break;
 
                 case ',':
                     // Expect comma only after an edge length, a node name, or a right paren
                     if (!nd->_parent || !(previous & Comma_Valid))
-                        throw XStrom(boost::str(boost::format("Unexpected comma at position %d in tree description") % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Unexpected comma at position %d in tree description") % position_in_string));
 
                     // Check for polytomies
                     if (!canHaveSibling(nd, rooted, allow_polytomies))
-                        throw XStrom(boost::str(boost::format("Polytomy found in the following tree description but polytomies prohibited:\n%s") % newick));
+                        throw Xseniorproject(boost::str(boost::format("Polytomy found in the following tree description but polytomies prohibited:\n%s") % newick));
 
                     // Create the sibling
                     curr_node_index++;
                     if (curr_node_index == _tree->_nodes.size())
-                        throw XStrom(boost::str(boost::format("Too many nodes specified by tree description (%d nodes allocated for %d leaves)") % _tree->_nodes.size() % _tree->_nleaves));
+                        throw Xseniorproject(boost::str(boost::format("Too many nodes specified by tree description (%d nodes allocated for %d leaves)") % _tree->_nodes.size() % _tree->_nleaves));
                     nd->_right_sib = &_tree->_nodes[curr_node_index];
                     nd->_right_sib->_parent = nd->_parent;
                     nd = nd->_right_sib;
@@ -847,13 +851,13 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
                 case '(':
                     // Expect left paren only after a comma or another left paren
                     if (!(previous & LParen_Valid))
-                        throw XStrom(boost::str(boost::format("Not expecting left parenthesis at position %d in tree description") % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Not expecting left parenthesis at position %d in tree description") % position_in_string));
 
                     // Create new node above and to the left of the current node
                     assert(!nd->_left_child);
                     curr_node_index++;
                     if (curr_node_index == _tree->_nodes.size())
-                        throw XStrom(boost::str(boost::format("malformed tree description (more than %d nodes specified)") % _tree->_nodes.size()));
+                        throw Xseniorproject(boost::str(boost::format("malformed tree description (more than %d nodes specified)") % _tree->_nodes.size()));
                     nd->_left_child = &_tree->_nodes[curr_node_index];
                     nd->_left_child->_parent = nd;
                     nd = nd->_left_child;
@@ -867,7 +871,7 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
                     // Expect node name only after a left paren (child's name), a comma (sib's name)
                     // or a right paren (parent's name)
                     if (!(previous & Name_Valid))
-                        throw XStrom(boost::str(boost::format("Not expecting node name at position %d in tree description") % position_in_string));
+                        throw Xseniorproject(boost::str(boost::format("Not expecting node name at position %d in tree description") % position_in_string));
 
                     // Get the rest of the name
                     nd->_name.clear();
@@ -901,11 +905,11 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
             }   // loop over characters in newick string
 
         if (inside_unquoted_name)
-            throw XStrom(boost::str(boost::format("Tree description ended before end of node name starting at position %d was found") % node_name_position));
+            throw Xseniorproject(boost::str(boost::format("Tree description ended before end of node name starting at position %d was found") % node_name_position));
         if (inside_edge_length)
-            throw XStrom(boost::str(boost::format("Tree description ended before end of edge length starting at position %d was found") % edge_length_position));
+            throw Xseniorproject(boost::str(boost::format("Tree description ended before end of edge length starting at position %d was found") % edge_length_position));
         if (inside_quoted_name)
-            throw XStrom(boost::str(boost::format("Expecting single quote to mark the end of node name at position %d in tree description") % node_name_position));
+            throw Xseniorproject(boost::str(boost::format("Expecting single quote to mark the end of node name at position %d in tree description") % node_name_position));
 
         if (!_tree->_is_rooted)
             {
@@ -916,7 +920,7 @@ inline void TreeManip::buildFromNewick(const std::string newick, bool rooted, bo
         refreshPreorder();
         refreshLevelorder();
         }
-    catch(XStrom x)
+    catch(Xseniorproject x)
         {
         clear();
         throw x;
@@ -953,6 +957,117 @@ inline void TreeManip::storeSplits(std::set<Split> & splitset)
             nd->_parent->_split.addSplit(nd->_split);
             }
         }
+    }
+
+inline Node * TreeManip::randomInternalEdge(double uniform_deviate)
+    {
+    assert(uniform_deviate >= 0.0);
+    assert(uniform_deviate < 1.0);
+
+    // Unrooted case:                        Rooted case:
+    //
+    // 2     3     4     5                   1     2     3     4
+    //  \   /     /     /                     \   /     /     /
+    //   \ /     /     /                       \ /     /     /
+    //    8     /     /                         7     /     /
+    //     \   /     /                           \   /     /
+    //      \ /     /                             \ /     /
+    //       7     /                               6     /
+    //        \   /                                 \   /
+    //         \ /                                   \ /
+    //          6   nleaves = 5                       5   nleaves = 4
+    //          |   num_internal_edges = 2            |   num_internal_edges = 2
+    //          |   choose node 7 or node 8           |   choose node 6 or node 7
+    //          1                                    root
+    //
+    // _preorder = [6, 7, 8, 2, 3, 4, 5]     _preorder = [5, 6, 7, 1, 2, 3, 4]
+    //
+    // Note: _preorder is actually a vector of T *, but is shown here as a
+    // vector of integers solely to illustrate the algorithm below
+
+    unsigned num_internal_edges = _tree->_nleaves - 2 - (_tree->_is_rooted ? 0 : 1);
+
+    // Add one to skip first node in _preorder vector, which is an internal node whose edge
+    // is either a terminal edge (if tree is unrooted) or invalid (if tree is rooted)
+    unsigned index_of_chosen = 1 + (unsigned)std::floor(uniform_deviate*num_internal_edges);
+
+    unsigned internal_nodes_visited = 0;
+    Node * chosen_node = 0;
+    for (auto nd : _tree->_preorder)
+        {
+        if (nd->_left_child)
+            {
+            if (internal_nodes_visited == index_of_chosen)
+                {
+                chosen_node = nd;
+                break;
+                }
+            else
+                ++internal_nodes_visited;
+            }
+        }
+    assert(chosen_node);
+    return chosen_node;
+    }
+
+inline void TreeManip::nniNodeSwap(Node * a, Node * b)
+    {
+    //     a                  b
+    //      \   /              \   /
+    //       \ /                \ /
+    //        x     b            x     a
+    //         \   /              \   /
+    //          \ /      ==>       \ /
+    //           y                  y
+    //           |                  |
+    //           |                  |
+    //
+    Node * x = a->_parent;
+    assert(x);
+
+    Node * y = b->_parent;
+    assert(y);
+
+    assert(y == x->_parent);
+
+    // Detach a from tree
+    if (a->_right_sib)
+        {
+        x->_left_child = a->_right_sib;
+        a->_parent = 0;
+        a->_right_sib = 0;
+        }
+    else
+        {
+        x->_left_child->_right_sib = 0;
+        a->_parent = 0;
+        }
+
+    // Detach b from tree
+    if (b == x->_right_sib)
+        {
+        x->_right_sib = 0;
+        b->_parent = 0;
+        }
+    else
+        {
+        y->_left_child = x;
+        b->_right_sib = 0;
+        b->_parent = 0;
+        }
+
+    // Reattach a to y
+    assert(!x->_right_sib);
+    x->_right_sib = a;
+    a->_parent = y;
+
+    // Reattach b to x
+    assert(!x->_left_child->_right_sib);
+    x->_left_child->_right_sib = b;
+    b->_parent = x;
+
+    refreshPreorder();
+    refreshLevelorder();
     }
 
 }

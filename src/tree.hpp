@@ -4,19 +4,19 @@
 #include <iostream>
 #include "node.hpp"
 
-namespace strom
+namespace seniorproject
     {
 
     class TreeManip;
     class Likelihood;
-    //class Updater;
+    class Updater;
 
     class Tree
         {
 
         friend class TreeManip;
         friend class Likelihood;
-        //friend class Updater;
+        friend class Updater;
 
         public:
 

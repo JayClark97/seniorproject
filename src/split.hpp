@@ -7,7 +7,7 @@
 #include <climits>
 #include <cassert>
 
-namespace strom
+namespace seniorproject
     {
 
     class Split

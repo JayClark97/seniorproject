@@ -5,12 +5,13 @@
 #include <vector>
 #include <numeric>
 #include <map>
+#include <regex>
 #include <boost/format.hpp>
-#include "xstrom.hpp"
+#include "xseniorproject.hpp"
 
 #include "ncl/nxsmultiformat.h"
 
-namespace strom {
+namespace seniorproject {
 
 class Data
     {
@@ -35,6 +36,9 @@ class Data
         unsigned                                getNumPatterns() const;
         unsigned                                getSeqLen() const;
         unsigned                                getNumTaxa() const;
+
+        std::string                             createTaxaBlock() const;
+        std::string                             createTranslateStatement() const;
 
     private:
 
@@ -99,9 +103,9 @@ inline void Data::compressPatterns()
     {
     // sanity checks
     if (_data_matrix.empty())
-        throw XStrom("Attempted to compress an empty data matrix");
+        throw Xseniorproject("Attempted to compress an empty data matrix");
     if (_data_matrix[0].size() < getSeqLen())
-        throw XStrom("Attempted to compress an already compressed data matrix");
+        throw Xseniorproject("Attempted to compress an already compressed data matrix");
 
     // create map with keys equal to patterns and values equal to site counts
     _pattern_map.clear();
@@ -153,7 +157,7 @@ inline void Data::compressPatterns()
 
     unsigned total_num_sites = std::accumulate(_pattern_counts.begin(), _pattern_counts.end(), 0);
     if (seqlen != total_num_sites)
-        throw XStrom(boost::str(boost::format("Total number of sites before compaction (%d) not equal to toal number of sites after (%d)") % seqlen % total_num_sites));
+        throw Xseniorproject(boost::str(boost::format("Total number of sites before compaction (%d) not equal to toal number of sites after (%d)") % seqlen % total_num_sites));
     }
 
 inline void Data::updatePatternMap(Data::pattern_t & pattern)
@@ -245,5 +249,35 @@ inline void Data::getDataFromFile(const std::string filename)
     compressPatterns();
     }
 
+inline std::string Data::createTaxaBlock() const
+    {
+    std::string s = "";
+    s += "begin taxa;\n";
+    s += boost::str(boost::format("  dimensions ntax=%d;\n") % _taxon_names.size());
+    s += "  taxlabels\n";
+    for (auto nm : _taxon_names)
+        {
+        std::string taxon_name = std::regex_replace(nm, std::regex(" "), "_");
+        s += "    " + taxon_name + "\n";
+        }
+    s += "    ;\n";
+    s += "end;\n";
+    return s;
+    }
+
+inline std::string Data::createTranslateStatement() const
+    {
+    std::string s = "";
+    s += "  translate\n";
+    unsigned t = 1;
+    for (auto nm : _taxon_names)
+        {
+        std::string taxon_name = std::regex_replace(nm, std::regex(" "), "_");
+        s += boost::str(boost::format("    %d %s%s\n") % t % taxon_name % (t < _taxon_names.size() ? "," : ""));
+        t++;
+        }
+    s += "  ;\n";
+    return s;
+    }
 
 }

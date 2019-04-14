@@ -5,20 +5,20 @@
 #include  <iostream>
 #include "split.hpp"
 
-namespace strom
+namespace seniorproject
     {
 
     class Tree;
     class TreeManip;
     class Likelihood;
-    //class Updater;
+    class Updater;
 
     class Node
         {
             friend class Tree;
             friend class TreeManip;
             friend class Likelihood;
-            //friend class Updater;
+            friend class Updater;
 
         public:
                                         Node();

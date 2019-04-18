@@ -13,7 +13,7 @@
 #include "tree_updater.hpp"
 #include "tree_length_updater.hpp"
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class Likelihood;

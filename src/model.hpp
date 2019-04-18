@@ -6,7 +6,7 @@
 #include <boost/math/distributions/gamma.hpp>
 #include <Eigen/Dense>
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class Model
@@ -161,7 +161,7 @@ inline std::vector<double> Model::getDiscreteGammaRateProbs() const
 inline void Model::setGammaNCateg(unsigned ncateg)
     {
     if (ncateg < 1)
-        throw Xseniorproject(boost::str(boost::format("number of categories used for among-site rate variation must be greater than zero but the value %d was supplied") % ncateg));
+        throw eX(boost::str(boost::format("number of categories used for among-site rate variation must be greater than zero but the value %d was supplied") % ncateg));
     _num_categ = ncateg;
     recalcGammaRates();
     }
@@ -169,7 +169,7 @@ inline void Model::setGammaNCateg(unsigned ncateg)
 inline void Model::setGammaShape(double shape)
     {
     if (shape <= 0.0)
-        throw Xseniorproject(boost::str(boost::format("gamma shape must be greater than zero but the value %.5f was supplied") % shape));
+        throw eX(boost::str(boost::format("gamma shape must be greater than zero but the value %.5f was supplied") % shape));
     _gamma_shape = shape;
     recalcGammaRates();
     }
@@ -255,7 +255,7 @@ inline void Model::recalcRateMatrix()
         Eigen::SelfAdjointEigenSolver<Eigen::Matrix4d> solver(S);
         if (solver.info() != Eigen::Success)
             {
-            throw Xseniorproject("Error in the calculation of eigenvectors and eigenvalues of the GTR rate matrix");
+            throw eX("Error in the calculation of eigenvectors and eigenvalues of the GTR rate matrix");
             }
 
         _eigenvectors           = _sqrtPiInv*solver.eigenvectors();

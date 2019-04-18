@@ -8,9 +8,9 @@
 #include "libhmsbeagle/beagle.h"
 #include "data.hpp"
 #include "model.hpp"
-#include "xseniorproject.hpp"
+#include "exHandler.hpp"
 
-namespace seniorproject {
+namespace phylocuda {
 
 class Likelihood
     {
@@ -130,7 +130,7 @@ inline void Likelihood::setData(Data::SharedPtr data)
         // finalize existing instance and create new one
         int code = beagleFinalizeInstance(_instance);
         if (code != 0)
-            throw Xseniorproject(boost::str(boost::format("Likelihood setData function failed to finalize BeagleLib instance. BeagleLib error code was %d (%s).") % code % _beagle_error[code]));
+            throw eX(boost::str(boost::format("Likelihood setData function failed to finalize BeagleLib instance. BeagleLib error code was %d (%s).") % code % _beagle_error[code]));
         _instance = -1;
         assert(_ntaxa > 0 && _nstates > 0 && _npatterns > 0);
         initBeagleLib();
@@ -145,7 +145,7 @@ inline void Likelihood::setModel(Model::SharedPtr model)
         // init function was previously called, so set the model and create new BeagleLib instance
         int code = beagleFinalizeInstance(_instance);
         if (code != 0)
-            throw Xseniorproject(boost::str(boost::format("Likelihood setModel function failed to finalize BeagleLib instance. BeagleLib error code was %d (%s).") % code % _beagle_error[code]));
+            throw eX(boost::str(boost::format("Likelihood setModel function failed to finalize BeagleLib instance. BeagleLib error code was %d (%s).") % code % _beagle_error[code]));
         _instance = -1;
         assert(_ntaxa > 0 && _nstates > 0 && _npatterns > 0);
         initBeagleLib();
@@ -174,7 +174,7 @@ inline void Likelihood::initBeagleLib()
     _npatterns  = _data->getNumPatterns();
     _nstates    = 4;
     _rooted     = false;
-    _prefer_gpu = false;
+    _prefer_gpu = true;
 
     std::cout << "Sequence length:    " << _data->getSeqLen() << std::endl;
     std::cout << "Number of taxa:     " << _ntaxa << std::endl;
@@ -216,7 +216,7 @@ inline void Likelihood::initBeagleLib()
         // beagleCreateInstance returns one of the following:
         //   valid instance (0, 1, 2, ...)
         //   error code (negative integer)
-        throw Xseniorproject(boost::str(boost::format("Likelihood init function failed to create Likelihood instance (BeagleLib error code was %d)") % _beagle_error[_instance]));
+        throw eX(boost::str(boost::format("Likelihood init function failed to create Likelihood instance (BeagleLib error code was %d)") % _beagle_error[_instance]));
         }
 
     setTipStates();
@@ -241,7 +241,7 @@ inline void Likelihood::setTipStates()
             &v[0]);         // Pointer to compact states vector
 
         if (code != 0)
-            throw Xseniorproject(boost::str(boost::format("failed to set tip state for taxon %d (\"%s\"; BeagleLib error code was %d)") % (i+1) % _data->getTaxonNames()[i] % code % _beagle_error[code]));
+            throw eX(boost::str(boost::format("failed to set tip state for taxon %d (\"%s\"; BeagleLib error code was %d)") % (i+1) % _data->getTaxonNames()[i] % code % _beagle_error[code]));
         ++i;
         }
     }
@@ -253,44 +253,44 @@ inline void Likelihood::setPatternWeights()
     int code = 0;
     const Data::pattern_counts_t & v = _data->getPatternCounts();
     if (v.empty())
-        throw Xseniorproject(boost::str(boost::format("failed to set pattern weights because data matrix has empty pattern count vector") % code));
+        throw eX(boost::str(boost::format("failed to set pattern weights because data matrix has empty pattern count vector") % code));
 
     code = beagleSetPatternWeights(
        _instance,     // instance number
        &v[0]);        // vector of pattern counts
 
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to set pattern weights. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to set pattern weights. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
     }
 
 inline void Likelihood::setDiscreteGammaShape()
     {
     int code = _model->setBeagleAmongSiteRateVariationRates(_instance);
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to set category rates. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to set category rates. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
 
     code = _model->setBeagleAmongSiteRateVariationProbs(_instance);
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to set category probabilities. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to set category probabilities. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
     }
 
 inline void Likelihood::setModelRateMatrix()
     {
     int code = _model->setBeagleStateFrequencies(_instance);
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to set state frequencies. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to set state frequencies. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
 
     code = _model->setBeagleEigenDecomposition(_instance);
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to set eigen decomposition. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to set eigen decomposition. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
 
     code = _model->setBeagleAmongSiteRateVariationRates(_instance);
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to set among-site rate variation rates. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to set among-site rate variation rates. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
 
     code = _model->setBeagleAmongSiteRateVariationProbs(_instance);
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to set among-site rate variation weights. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to set among-site rate variation weights. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
     }
 
 inline void Likelihood::defineOperations(typename Tree::SharedPtr t)
@@ -366,14 +366,14 @@ inline void Likelihood::updateTransitionMatrices()
         (int)_pmatrix_index.size());    // Length of lists
 
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to update transition matrices. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to update transition matrices. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
     }
 
 inline void Likelihood::calculatePartials()
     {
     int code = beagleResetScaleFactors(_instance, 0);
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to reset scale factors in calculatePartials. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to reset scale factors in calculatePartials. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
 
     // Calculate or queue for calculation partials using a list of operations
     int totalOperations = (int)(_operations.size()/7);
@@ -384,7 +384,7 @@ inline void Likelihood::calculatePartials()
         0);                                     // Index number of scaleBuffer to store accumulated factors
 
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to update partials. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to update partials. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
     }
 
 inline double Likelihood::calcLogLikelihood(typename Tree::SharedPtr t)
@@ -393,10 +393,10 @@ inline double Likelihood::calcLogLikelihood(typename Tree::SharedPtr t)
         return 0.0;
 
     if (t->_is_rooted)
-        throw Xseniorproject("can only compute likelihoods for unrooted trees currently");
+        throw eX("can only compute likelihoods for unrooted trees currently");
 
     if (!_data)
-        throw Xseniorproject("must call setData before calcLogLikelihood");
+        throw eX("must call setData before calcLogLikelihood");
 
     initBeagleLib(); // this is a no-op if a valid instance already exists
 
@@ -442,10 +442,10 @@ inline double Likelihood::calcLogLikelihood(typename Tree::SharedPtr t)
         NULL);                      // destination for second derivative
 
     if (code != 0)
-        throw Xseniorproject(boost::str(boost::format("failed to calculate edge logLikelihoods in CalcLogLikelihood. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
+        throw eX(boost::str(boost::format("failed to calculate edge logLikelihoods in CalcLogLikelihood. BeagleLib error code was %d (%s)") % code % _beagle_error[code]));
 
     return log_likelihood;
     }
 
 
-} // namespace seniorproject
+}

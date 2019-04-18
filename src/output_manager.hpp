@@ -3,10 +3,10 @@
 #include "data.hpp"
 #include "tree_manip.hpp"
 #include "model.hpp"
-#include "xseniorproject.hpp"
+#include "exHandler.hpp"
 #include <fstream>
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class OutputManager
@@ -61,7 +61,7 @@ inline void OutputManager::openTreeFile(std::string filename, Data::SharedPtr da
     _tree_file_name = filename;
     _treefile.open(_tree_file_name.c_str());
     if (!_treefile.is_open())
-        throw Xseniorproject(boost::str(boost::format("Could not open tree file \"%s\"") % _tree_file_name));
+        throw eX(boost::str(boost::format("Could not open tree file \"%s\"") % _tree_file_name));
 
     _treefile << "#nexus\n\n";
     _treefile << data->createTaxaBlock() << std::endl;
@@ -84,7 +84,7 @@ inline void OutputManager::openParameterFile(std::string filename, Model::Shared
     _param_file_name = filename;
     _parameterfile.open(_param_file_name.c_str());
     if (!_parameterfile.is_open())
-        throw Xseniorproject(boost::str(boost::format("Could not open parameter file \"%s\"") % _param_file_name));
+        throw eX(boost::str(boost::format("Could not open parameter file \"%s\"") % _param_file_name));
     _parameterfile << boost::str(boost::format("%s\t%s\t%s\t%s\t%s") % "iter" % "lnL" % "lnPr" % "TL" % model->paramNamesAsString("\t")) << std::endl;
     }
 

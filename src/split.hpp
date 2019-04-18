@@ -7,7 +7,7 @@
 #include <climits>
 #include <cassert>
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class Split

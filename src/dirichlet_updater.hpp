@@ -2,7 +2,7 @@
 
 #include "updater.hpp"
 
-namespace seniorproject
+namespace phylocuda
 {
 
     class Chain;

@@ -3,7 +3,7 @@
 #include "model.hpp"
 #include "updater.hpp"
 
-namespace seniorproject
+namespace phylocuda
 {
 
     class GammaShapeUpdater : public Updater

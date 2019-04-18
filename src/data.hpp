@@ -7,11 +7,11 @@
 #include <map>
 #include <regex>
 #include <boost/format.hpp>
-#include "xseniorproject.hpp"
+#include "exHandler.hpp"
 
 #include "ncl/nxsmultiformat.h"
 
-namespace seniorproject {
+namespace phylocuda {
 
 class Data
     {
@@ -103,9 +103,9 @@ inline void Data::compressPatterns()
     {
     // sanity checks
     if (_data_matrix.empty())
-        throw Xseniorproject("Attempted to compress an empty data matrix");
+        throw eX("Attempted to compress an empty data matrix");
     if (_data_matrix[0].size() < getSeqLen())
-        throw Xseniorproject("Attempted to compress an already compressed data matrix");
+        throw eX("Attempted to compress an already compressed data matrix");
 
     // create map with keys equal to patterns and values equal to site counts
     _pattern_map.clear();
@@ -157,7 +157,7 @@ inline void Data::compressPatterns()
 
     unsigned total_num_sites = std::accumulate(_pattern_counts.begin(), _pattern_counts.end(), 0);
     if (seqlen != total_num_sites)
-        throw Xseniorproject(boost::str(boost::format("Total number of sites before compaction (%d) not equal to toal number of sites after (%d)") % seqlen % total_num_sites));
+        throw eX(boost::str(boost::format("Total number of sites before compaction (%d) not equal to toal number of sites after (%d)") % seqlen % total_num_sites));
     }
 
 inline void Data::updatePatternMap(Data::pattern_t & pattern)

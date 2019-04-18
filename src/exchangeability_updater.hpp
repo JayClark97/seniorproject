@@ -2,7 +2,7 @@
 
 #include "dirichlet_updater.hpp"
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class ExchangeabilityUpdater : public DirichletUpdater

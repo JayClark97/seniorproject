@@ -10,11 +10,11 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include "split.hpp"
 #include "tree_manip.hpp"
-#include "xseniorproject.hpp"
+#include "exHandler.hpp"
 
 #include "ncl/nxsmultiformat.h"
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class TreeSummary
@@ -52,7 +52,7 @@ inline TreeSummary::~TreeSummary()
 inline Tree::SharedPtr TreeSummary::getTree(unsigned index)
     {
     if (index >= _newicks.size())
-        throw Xseniorproject("getTree called with index >= number of stored trees");
+        throw eX("getTree called with index >= number of stored trees");
 
     TreeManip tm;
 
@@ -65,7 +65,7 @@ inline Tree::SharedPtr TreeSummary::getTree(unsigned index)
 inline std::string TreeSummary::getNewick(unsigned index)
     {
     if (index >= _newicks.size())
-        throw Xseniorproject("getNewick called with index >= number of stored trees");
+        throw eX("getNewick called with index >= number of stored trees");
 
         return _newicks[index];
     }

@@ -4,7 +4,7 @@
 #include <iostream>
 #include "node.hpp"
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class TreeManip;

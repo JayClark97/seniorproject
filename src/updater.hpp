@@ -3,10 +3,10 @@
 #include "tree.hpp"
 #include "tree_manip.hpp"
 #include "lot.hpp"
-#include "xseniorproject.hpp"
+#include "exHandler.hpp"
 #include "likelihood.hpp"
 
-namespace seniorproject
+namespace phylocuda
 {
     class Chain;
 

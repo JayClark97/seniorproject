@@ -5,7 +5,7 @@
 #include  <iostream>
 #include "split.hpp"
 
-namespace seniorproject
+namespace phylocuda
     {
 
     class Tree;
